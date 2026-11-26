@@ -66,6 +66,25 @@ class Tests {
         object a=new object(), b=new object();c=Ready();Check(c.TrySetBank(a,50),"external acquire");Near(c.RollTarget,30,"external bounded");Check(!c.TrySetBank(b,0),"external exclusivity");Check(!c.TrySetBank(a,double.NaN),"external invalid rejected");c.ReleaseExternalControl(b);Check(c.RollHoldEnabled,"nonowner release ignored");c.ReleaseExternalControl(a);Check(!c.RollHoldEnabled,"owner releases roll");c.SetEngaged(false);Check(!c.TrySetBank(a,0),"disengaged external refused");
     }
     static void Numeric() {
+        double[] gains={0.005,0.0001,0.02,0.5,123.456};
+        string[] displayed={"0.005","0.0001","0.02","0.5","123.456"};
+        for(int i=0;i<gains.Length;i++) {
+            var gain=new EditableDouble(gains[i]);
+            Check(gain.Text==displayed[i],"exact initial gain display "+displayed[i]);
+            var roundTrip=new EditableDouble(0);roundTrip.Text=gain.Text;
+            Check(roundTrip.Valid&&BitConverter.DoubleToInt64Bits(roundTrip.Val)==BitConverter.DoubleToInt64Bits(gains[i]),"gain display roundtrip "+displayed[i]);
+        }
+        foreach(string text in new[]{"5e-3","1E-4","-1.25e2","1.2345678901234567"}) {
+            var gain=new EditableDouble(0);gain.Text=text;
+            double expected=double.Parse(text,System.Globalization.CultureInfo.InvariantCulture);
+            Check(gain.Valid&&gain.Text==text&&BitConverter.DoubleToInt64Bits(gain.Val)==BitConverter.DoubleToInt64Bits(expected),"unrounded numeric editing "+text);
+        }
+        var culture=System.Globalization.CultureInfo.CurrentCulture;
+        try {
+            System.Globalization.CultureInfo.CurrentCulture=new System.Globalization.CultureInfo("fr-FR");
+            var gain=new EditableDouble(0.005);Check(gain.Text=="0.005","invariant gain display");
+            gain.Text="1e-4";Check(gain.Valid&&gain.Val==0.0001,"invariant exponent parsing");
+        } finally {System.Globalization.CultureInfo.CurrentCulture=culture;}
         var f=new EditableDouble(12.5); f.Text="-"; Check(!f.Valid,"incomplete number rejected"); Near(f.Val,12.5,"last value retained");
         f.Text="NaN";Check(!f.Valid,"NaN numeric text rejected");Near(f.Val,12.5,"NaN retains value");
         f.Text="Infinity";Check(!f.Valid,"infinity numeric text rejected");
@@ -111,8 +130,9 @@ class Tests {
         Check(refs.Contains("Assembly-CSharp")&&refs.Contains("UnityEngine.CoreModule"),"compiled against real KSP/Unity");
         Check(!refs.Any(x=>x.Contains("MechJeb")||x.Contains("Harmony")||x.Contains("Kramax")),"no prohibited assembly dependencies");
         Check(!refs.Contains("System.Private.CoreLib")&&!refs.Contains("System.Runtime"),"Mono framework target");
+        Check(!r.TypeReferences.Any(x=>r.GetString(r.GetTypeReference(x).Name)=="KSPActionGroup"),"plugin does not read/write SAS action groups");
         Console.WriteLine("Plugin references: "+string.Join(", ",refs));
         Check(r.GetString(r.GetAssemblyDefinition().Name)=="AircraftAutopilotContinued","unique assembly name");
     }
-    static int Main(string[] args) { try{PID();Telemetry();Modes();Numeric();Ownership();ConflictTests.Run(Check);Differential();Metadata(args[0]);Console.WriteLine("PASS: "+checks+" assertions (including 1,200 historical differential steps). Native flight/GUI not tested.");return 0;}catch(Exception e){Console.Error.WriteLine(e);return 1;} }
+    static int Main(string[] args) { try{PID();Telemetry();Modes();Numeric();Ownership();ConflictTests.Run(Check);WindowSizingTests.Run(Check);Differential();Metadata(args[0]);Console.WriteLine("PASS: "+checks+" assertions (including 1,200 historical differential steps). Native flight/GUI not tested.");return 0;}catch(Exception e){Console.Error.WriteLine(e);return 1;} }
 }

@@ -1,41 +1,43 @@
 # Aircraft Autopilot Continued
 
-Independent GPL-3.0-only standalone continuation of the MechJeb 2.15.4.0
-Aircraft Autopilot for KSP 1.12.5 (macOS build 03190). MechJeb is not required.
+A standalone continuation of **MechJeb's Aircraft Autopilot**, which is being removed in future versions of MechJeb.
 
-Build: `bash scripts/build.sh` with a .NET SDK (`DOTNET=/absolute/path/to/dotnet`)
-and the supplied game under `Source/KSP_osx`. Compile references come from that
-game, never from MechJeb. No package restore is needed.
+Preserves the familiar interface and flight controls, including:
+- Altitude and vertical speed hold
+- Heading and bank angle hold
+- Speed hold (automatic throttle)
+- Adjustable PID controllers for fine-tuning aircraft behavior
 
-Test: `bash scripts/test.sh`. Install: `bash scripts/install.sh`.
-Uninstall only this mod: `bash scripts/install.sh --uninstall`.
-For another game installation, copy `dist/GameData/AircraftAutopilotContinued`
-into its GameData. Distribute the binary ZIP together with the source ZIP.
+**MechJeb is not required.**
 
-In flight, open the aircraft icon on the stock toolbar. Set the desired modes
-and targets, disable SAS and other autopilots, and press Engage autopilot.
-Closing the window keeps Auto engaged. Disengage to return the owned channels
-to the player. Throttle remains at its last command until the player changes it;
-Speed Hold OFF never commands zero. SAS activation releases our controller.
-Vessel switching, unloading, scene exit and faults disengage; returning never
-silently reengages. Unknown flight-control hooks produce diagnostic warnings rather than automatic refusal.
-Idle MechJeb thrust (sole self-user, OFF mode) is allowed. Additional throttle users
-or non-OFF modes, active MechJeb attitude/aircraft control and active Kramax George
-modes prevent engagement. Unreadable known ownership reports the specific uncertainty.
-FAR aerodynamics are allowed; disable any separate FAR assistance controller.
+## Installation
 
-All five original modes and four editable PIDs are retained. As in the original,
-vertical-speed target is nonnegative (a climb/descent magnitude in Altitude Hold),
-heading hold enables roll hold, disabling heading hold disables roll hold, and
-rudder runs only under heading hold. Fields apply with Set; +/- applies immediately;
-KSP's modifier key changes increments from 1 to 5. Invalid numeric text retains
-the last valid value. PID gains apply live. A zero V/S limit prevents altitude changes.
+Download the latest release and extract the `GameData` folder into your KSP installation.
 
-Settings: `GameData/AircraftAutopilotContinued/PluginData/settings.cfg` saves gains,
-limits, targets, window position and PID panel visibility. Remove it to reset.
-Engagement and mode flags are never restored across sessions. Within a flight,
-mode/target state belongs to its vessel; saved numeric defaults seed new vessels.
+Compatible with **Kerbal Space Program 1.12.5**.
 
-See [porting notes](docs/PORTING_NOTES.md), [testing](docs/TESTING.md) and
-[small public API](docs/PUBLIC_API.md). Successful compilation and deterministic
-tests do not establish physical aircraft stability; complete the manual checklist.
+## Quick Start
+
+Click the **`Aircr Auto`** button in the in-game toolbar to open the autopilot panel.
+
+The interface closely follows the original MechJeb Aircraft Autopilot and should be familiar to existing users. Select the controls you want, set their targets, and click **Engage Autopilot**.
+
+For advanced users, expand the **PID** section to tune the controller parameters yourself.
+
+## Why I Made This Mod
+
+My [MechJeb Waypoint Navigator](https://github.com/siyang03/MechJeb-Waypoint-Navigator) mod relies on precise bank angle control, which isn't easily achieved with AtmosphereAutopilot.
+
+With MechJeb removing its Aircraft Autopilot module, I decided to keep this useful feature alive as an independent mod.
+
+## Credits and License
+
+Based on the Aircraft Autopilot from [MechJeb 2.15.4.0](https://github.com/MuMech/MechJeb2), developed by the MechJeb contributors.
+
+Aircraft Autopilot Continued is independently maintained and is not an official MechJeb release.
+
+Licensed under **GNU GPL-3.0-only**.
+
+---
+
+**AI Acknowledgment:** This project was developed with the assistance of [ChatGPT by OpenAI](https://chatgpt.com), including software design, implementation, debugging, testing, and documentation.

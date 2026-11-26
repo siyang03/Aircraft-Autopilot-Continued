@@ -17,7 +17,7 @@ mkdir -p build
 REFS=()
 for ref in "$REFDIR"/*.dll; do REFS+=("-r:$ref"); done
 SOURCES=()
-for name in AircraftAutopilotController AircraftTelemetry PIDController MovingAverage Maths NumericField CallbackOwnership ConflictDetector; do SOURCES+=("Source/AircraftAutopilotContinued/$name.cs"); done
+for name in AircraftAutopilotController AircraftTelemetry PIDController MovingAverage Maths NumericField CallbackOwnership ConflictDetector WindowLayout; do SOURCES+=("Source/AircraftAutopilotContinued/$name.cs"); done
 "$DOTNET" "$CSC" -nologo -noconfig -nostdlib+ -langversion:latest -target:exe "${REFS[@]}" -out:build/Tests.dll "${SOURCES[@]}" tests/*.cs tests/fixtures/*.cs
 cat > build/Tests.runtimeconfig.json <<'JSON'
 {"runtimeOptions":{"tfm":"net8.0","framework":{"name":"Microsoft.NETCore.App","version":"8.0.0"}}}

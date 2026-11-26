@@ -11,7 +11,7 @@ namespace AircraftAutopilotContinued
         public static AircraftAutopilotAddon Instance { get; private set; }
         public AircraftAutopilotController Controller { get; private set; }
         public AircraftAutopilotWindow Window { get; private set; }
-        public Rect WindowRect = new Rect(180, 100, 400, 260);
+        public Rect WindowRect = new Rect(180, 100, WindowLayout.PreferredWidth, 260);
         public bool Visible { get; private set; }
         public string Status { get; private set; } = "Disengaged. Disable other flight controllers before engaging.";
         readonly Dictionary<Guid, AircraftAutopilotController> controllers = new Dictionary<Guid, AircraftAutopilotController>();
@@ -23,6 +23,9 @@ namespace AircraftAutopilotContinued
         Vessel selected;
         ApplicationLauncherButton button;
         Vector2 scroll;
+        readonly WindowLayout windowSizing = new WindowLayout();
+        WindowLayout.Plan windowPlan;
+        bool hasWindowPlan;
         const string LockName = "AircraftAutopilotContinued.Window";
         const int WindowId = 0x414143;
         void Awake()
@@ -128,7 +131,6 @@ namespace AircraftAutopilotContinued
         }
         string Conflict(Vessel vessel, bool refresh = false)
         {
-            if (vessel.ActionGroups[KSPActionGroup.SAS]) return "SAS is ON: disable SAS before using Auto.";
             try {
                 float now = Time.realtimeSinceStartup;
                 if (refresh || conflictVessel != vessel || now >= nextConflictDiscovery) {
@@ -136,7 +138,7 @@ namespace AircraftAutopilotContinued
                     conflictVessel = vessel;
                     nextConflictDiscovery = now + 1f;
                 }
-                return conflicts.Check(false);
+                return conflicts.Check();
             } catch (Exception e) {
                 Debug.LogWarning("[AAC] Conflict discovery: " + e);
                 return "Cannot inspect flight-control ownership: discovery failed. See KSP.log.";
@@ -154,13 +156,34 @@ namespace AircraftAutopilotContinued
         {
             if (!Visible || Window == null || !HighLogic.LoadedSceneIsFlight) return;
             GUI.skin = HighLogic.Skin;
-            WindowRect.x = Mathf.Clamp(WindowRect.x, 0, Math.Max(0, Screen.width - WindowRect.width));
-            WindowRect.y = Mathf.Clamp(WindowRect.y, 0, Math.Max(0, Screen.height - 80));
+            // Choose a layout only on Layout events: changing the scroll hierarchy during
+            // Repaint/MouseUp would invalidate Unity's cached IMGUI control layout.
+            float chrome = GUI.skin.window.padding.vertical;
+            if (Event.current.type == EventType.Layout || !hasWindowPlan) {
+                windowPlan = WindowLayout.Fit(Screen.width, Screen.height,
+                    windowSizing.BeginLayout(Window.showpid), chrome);
+                hasWindowPlan = true;
+                if (!windowPlan.Scroll) scroll = Vector2.zero;
+            }
+            WindowRect.width = windowPlan.Width;
+            WindowRect.height = windowPlan.Height;
+            WindowRect.x = WindowLayout.ClampPosition(WindowRect.x, windowPlan.Width, Screen.width);
+            WindowRect.y = WindowLayout.ClampPosition(WindowRect.y, windowPlan.Height, Screen.height);
+            // Reserve a scrollbar gutter even without scrolling, keeping wrapping and natural
+            // content height identical in both layouts (avoids a scrollbar/height feedback loop).
+            float gutter = Math.Max(16, GUI.skin.verticalScrollbar.fixedWidth + GUI.skin.verticalScrollbar.margin.horizontal);
+            float contentWidth = Math.Max(1, WindowLayout.PreferredWidth - GUI.skin.window.padding.horizontal - gutter);
             WindowRect = GUILayout.Window(WindowId, WindowRect, id => {
-                scroll = GUILayout.BeginScrollView(scroll, GUILayout.MaxHeight(Math.Max(100, Screen.height - 100)));
-                Window.WindowGUI(id); GUILayout.EndScrollView();
+                if (windowPlan.Scroll)
+                    scroll = GUILayout.BeginScrollView(scroll, false, false, GUILayout.Height(windowPlan.ViewportHeight));
+                GUILayout.BeginVertical(GUILayout.Width(contentWidth), GUILayout.ExpandHeight(false));
+                Window.WindowGUI(id);
+                GUILayout.EndVertical();
+                if (Event.current.type == EventType.Repaint)
+                    windowSizing.ObserveContentHeight(Window.showpid, GUILayoutUtility.GetLastRect().height);
+                if (windowPlan.Scroll) GUILayout.EndScrollView();
                 GUI.DragWindow(new Rect(0, 0, 10000, 22));
-            }, "Aircraft Autopilot", GUILayout.Width(400), GUILayout.Height(0));
+            }, "Aircraft Autopilot", GUILayout.Width(windowPlan.Width), GUILayout.Height(windowPlan.Height));
         }
         void OnDestroy()
         {

@@ -27,7 +27,9 @@ same row order, conditional V/S/bank rows, modifier increments, target clamps,
 Set actions, four PID triplets, diagnostics and limit controls. Standalone
 English strings replace localization. A close button, status text, stock skin,
 scrolling, saved position and mouse-over control locks replace DisplayModule.
-The window is 400 pixels wide to fit independent controls and status text.
+The window is now 460 pixels wide by default, with content-measured vertical
+expansion and scrolling only when screen bounds require it. Gain fields use
+stock-style text measurement with a 60-pixel minimum, preserving their strings.
 The title remains draggable outside the scrolling content. The original GUI's
 nonnegative vertical-speed editing and signed [-60,+60] bank field clamp remain;
 normal operation should use a positive bank magnitude.
@@ -49,7 +51,8 @@ normal operation should use a positive bank magnitude.
   into `FlightInputHandler.state.mainThrottle` only for the active vessel while
   Speed Hold owns it. Speed Hold OFF or full disengagement writes no throttle,
   restores no stale input, and leaves the last commanded value for player handoff.
-* The host refuses engagement with SAS active, MechJeb aircraft/attitude control,
+* The host leaves SAS entirely unmanaged (ON and OFF are allowed). It refuses
+  engagement with MechJeb aircraft/attitude control,
   MechJeb thrust with additional users or a non-OFF Tmode, and Kramax George with
   HrztActive, VertActive or ThrtActive set. MechJeb Thrust.Enabled alone does not
   imply ownership: the healthy sole self-user with OFF mode is allowed. Missing

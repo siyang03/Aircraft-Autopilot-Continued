@@ -60,9 +60,8 @@ namespace AircraftAutopilotContinued
                         ". Registration alone does not establish active control; keep other autopilots OFF.");
             }
         }
-        internal string Check(bool sas)
+        internal string Check()
         {
-            if (sas) return "SAS is ON: disable SAS before using Auto.";
             foreach (object module in mechJeb) {
                 try {
                     if (Enabled(Member(module, "Attitude"))) return "MechJeb attitude control is active. Disengage it first.";

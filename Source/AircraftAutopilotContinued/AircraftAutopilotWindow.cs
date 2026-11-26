@@ -24,8 +24,16 @@ namespace AircraftAutopilotContinued
             VertSpeedTargettmp                  = 0,
             RollMaxtmp                          = 30;
 
+        // Measure the longest required sample in the active stock style; never round its value.
+        static string GainField(EditableDouble field)
+        {
+            float width = Math.Max(60, GUI.skin.textField.CalcSize(new GUIContent("123.456")).x + 4);
+            return GUILayout.TextField(field.Text, GUILayout.Width(width));
+        }
+        static GUIStyle wrappedLabel;
         public void WindowGUI(int windowID)
         {
+            if (wrappedLabel == null) wrappedLabel = new GUIStyle(GUI.skin.label) { wordWrap = true };
             if (btNormal == null)
             {
                 btNormal                    = new GUIStyle(GUI.skin.button);
@@ -332,59 +340,59 @@ namespace AircraftAutopilotContinued
                 GUILayout.BeginHorizontal();
                 GUILayout.Label(string.Format("Accceleration"), GUILayout.ExpandWidth(true)); //Accceleration
                 GUILayout.Label("Kp", GUILayout.ExpandWidth(false));
-                autopilot.AccKp.Text = GUILayout.TextField(autopilot.AccKp.Text, GUILayout.Width(40));
-                GUILayout.Label("i", GUILayout.ExpandWidth(false));
-                autopilot.AccKi.Text = GUILayout.TextField(autopilot.AccKi.Text, GUILayout.Width(40));
-                GUILayout.Label("d", GUILayout.ExpandWidth(false));
-                autopilot.AccKd.Text = GUILayout.TextField(autopilot.AccKd.Text, GUILayout.Width(40));
+                autopilot.AccKp.Text = GainField(autopilot.AccKp);
+                GUILayout.Label("Ki", GUILayout.ExpandWidth(false));
+                autopilot.AccKi.Text = GainField(autopilot.AccKi);
+                GUILayout.Label("Kd", GUILayout.ExpandWidth(false));
+                autopilot.AccKd.Text = GainField(autopilot.AccKd);
                 GUILayout.EndHorizontal();
                 if (autopilot.SpeedHoldEnabled)
                     GUILayout.Label(
                         string.Format("Error:{0} Target:{1} Cur:{2}", autopilot.AErr.ToString("F2"),
                             autopilot.RealAccelerationTarget.ToString("F2"), autopilot.CurAcc.ToString("F2")),
-                        GUILayout.ExpandWidth(false)); //"error:"<<1>>" Target:"<<2>> " Cur:"<<3>>
+                        wrappedLabel, GUILayout.ExpandWidth(true)); //"error:"<<1>>" Target:"<<2>> " Cur:"<<3>>
 
                 GUILayout.BeginHorizontal();
                 GUILayout.Label(string.Format("Pitch"), GUILayout.ExpandWidth(true)); //"VertSpeed"
                 GUILayout.Label("Kp", GUILayout.ExpandWidth(false));
-                autopilot.PitKp.Text = GUILayout.TextField(autopilot.PitKp.Text, GUILayout.Width(40));
-                GUILayout.Label("i", GUILayout.ExpandWidth(false));
-                autopilot.PitKi.Text = GUILayout.TextField(autopilot.PitKi.Text, GUILayout.Width(40));
-                GUILayout.Label("d", GUILayout.ExpandWidth(false));
-                autopilot.PitKd.Text = GUILayout.TextField(autopilot.PitKd.Text, GUILayout.Width(40));
+                autopilot.PitKp.Text = GainField(autopilot.PitKp);
+                GUILayout.Label("Ki", GUILayout.ExpandWidth(false));
+                autopilot.PitKi.Text = GainField(autopilot.PitKi);
+                GUILayout.Label("Kd", GUILayout.ExpandWidth(false));
+                autopilot.PitKd.Text = GainField(autopilot.PitKd);
                 GUILayout.EndHorizontal();
                 if (autopilot.VertSpeedHoldEnabled)
                     GUILayout.Label(string.Format("Error:{0} Target:{1} Cur:{2} PID: {3}", autopilot.PitchErr.ToString("F2"),
-                        autopilot.RealPitchTarget.ToString("F2"), VesselState.currentPitch.ToString("F2"), autopilot.PitchAct.ToString("F5"),
-                        GUILayout.ExpandWidth(false))); //error:" Target:"" Cur:"
+                        autopilot.RealPitchTarget.ToString("F2"), VesselState.currentPitch.ToString("F2"), autopilot.PitchAct.ToString("F5")), wrappedLabel,
+                        GUILayout.ExpandWidth(true)); //error:" Target:"" Cur:"
 
                 GUILayout.BeginHorizontal();
                 GUILayout.Label(string.Format("Roll"), GUILayout.ExpandWidth(true)); //Roll
                 GUILayout.Label("Kp", GUILayout.ExpandWidth(false));
-                autopilot.RolKp.Text = GUILayout.TextField(autopilot.RolKp.Text, GUILayout.Width(40));
-                GUILayout.Label("i", GUILayout.ExpandWidth(false));
-                autopilot.RolKi.Text = GUILayout.TextField(autopilot.RolKi.Text, GUILayout.Width(40));
-                GUILayout.Label("d", GUILayout.ExpandWidth(false));
-                autopilot.RolKd.Text = GUILayout.TextField(autopilot.RolKd.Text, GUILayout.Width(40));
+                autopilot.RolKp.Text = GainField(autopilot.RolKp);
+                GUILayout.Label("Ki", GUILayout.ExpandWidth(false));
+                autopilot.RolKi.Text = GainField(autopilot.RolKi);
+                GUILayout.Label("Kd", GUILayout.ExpandWidth(false));
+                autopilot.RolKd.Text = GainField(autopilot.RolKd);
                 GUILayout.EndHorizontal();
                 if (autopilot.RollHoldEnabled)
                     GUILayout.Label(string.Format("Error:{0} Target:{1} Cur:{2} PID: {3}", autopilot.RollErr.ToString("F2"),
-                        autopilot.RealRollTarget.ToString("F2"), (-VesselState.currentRoll).ToString("F2"), autopilot.RollAct.ToString("F5"),
-                        GUILayout.ExpandWidth(false))); //error:" Target:"" Cur:"
+                        autopilot.RealRollTarget.ToString("F2"), (-VesselState.currentRoll).ToString("F2"), autopilot.RollAct.ToString("F5")), wrappedLabel,
+                        GUILayout.ExpandWidth(true)); //error:" Target:"" Cur:"
 
                 GUILayout.BeginHorizontal();
                 GUILayout.Label("Yaw", GUILayout.ExpandWidth(true));
                 GUILayout.Label("Kp", GUILayout.ExpandWidth(false));
-                autopilot.YawKp.Text = GUILayout.TextField(autopilot.YawKp.Text, GUILayout.Width(40));
-                GUILayout.Label("i", GUILayout.ExpandWidth(false));
-                autopilot.YawKi.Text = GUILayout.TextField(autopilot.YawKi.Text, GUILayout.Width(40));
-                GUILayout.Label("d", GUILayout.ExpandWidth(false));
-                autopilot.YawKd.Text = GUILayout.TextField(autopilot.YawKd.Text, GUILayout.Width(40));
+                autopilot.YawKp.Text = GainField(autopilot.YawKp);
+                GUILayout.Label("Ki", GUILayout.ExpandWidth(false));
+                autopilot.YawKi.Text = GainField(autopilot.YawKi);
+                GUILayout.Label("Kd", GUILayout.ExpandWidth(false));
+                autopilot.YawKd.Text = GainField(autopilot.YawKd);
                 GUILayout.EndHorizontal();
                 if (autopilot.HeadingHoldEnabled)
                     GUILayout.Label(string.Format("Error:{0} Target:{1} Cur:{2} PID: {3}", autopilot.YawErr.ToString("F2"),
-                        autopilot.RealYawTarget.ToString("F2"), autopilot.CurrYaw.ToString("F2"), autopilot.YawAct.ToString("F5"),
-                        GUILayout.ExpandWidth(false))); //error:" Target:"" Cur:"
+                        autopilot.RealYawTarget.ToString("F2"), autopilot.CurrYaw.ToString("F2"), autopilot.YawAct.ToString("F5")), wrappedLabel,
+                        GUILayout.ExpandWidth(true)); //error:" Target:"" Cur:"
 
                 GUILayout.BeginHorizontal();
                 GUILayout.Label(string.Format("Limits:"), GUILayout.ExpandWidth(false)); //Yaw Control Limit
@@ -402,7 +410,7 @@ namespace AircraftAutopilotContinued
                 GUILayout.EndHorizontal();
             }
 
-            GUILayout.Label(host.Status);
+            GUILayout.Label(host.Status, wrappedLabel, GUILayout.ExpandWidth(true));
             if (GUILayout.Button("Close")) host.SetVisible(false);
         }
 
