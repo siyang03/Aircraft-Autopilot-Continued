@@ -1,7 +1,6 @@
 // GPL-3.0-only. Standalone KSP host; no MechJeb dependency.
 using System;
 using System.Collections.Generic;
-using System.Reflection;
 using UnityEngine;
 using KSP.UI.Screens;
 namespace AircraftAutopilotContinued
@@ -18,6 +17,9 @@ namespace AircraftAutopilotContinued
         readonly Dictionary<Guid, AircraftAutopilotController> controllers = new Dictionary<Guid, AircraftAutopilotController>();
         readonly Dictionary<Guid, AircraftAutopilotWindow> windows = new Dictionary<Guid, AircraftAutopilotWindow>();
         readonly CallbackOwnership<Vessel> ownership = new CallbackOwnership<Vessel>();
+        readonly ConflictDetector conflicts = new ConflictDetector(message => Debug.LogWarning("[AAC] " + message));
+        Vessel conflictVessel;
+        float nextConflictDiscovery;
         Vessel selected;
         ApplicationLauncherButton button;
         Vector2 scroll;
@@ -62,6 +64,7 @@ namespace AircraftAutopilotContinued
             AutopilotSettings.Save(this);
             Disengage("Vessel changed: autopilot disengaged");
             selected = vessel; Controller = null; Window = null;
+            conflictVessel = null;
             if (vessel == null) return;
             AircraftAutopilotController c;
             if (!controllers.TryGetValue(vessel.id, out c)) {
@@ -77,7 +80,7 @@ namespace AircraftAutopilotContinued
         {
             if (!Usable(selected) || Controller == null) { Status = "Cannot engage: active vessel must be loaded, unpacked and controllable."; return false; }
             if (Controller.Enabled) return true;
-            string conflict = Conflict(selected);
+            string conflict = Conflict(selected, true);
             if (conflict != null) { Status = conflict; return false; }
             Controller.SetEngaged(true);
             ownership.Attach(selected, v => { v.OnFlyByWire -= FlyByWire; v.OnFlyByWire += FlyByWire; }, v => v.OnFlyByWire -= FlyByWire);
@@ -112,36 +115,32 @@ namespace AircraftAutopilotContinued
             } catch (Exception e) { Fault(e); }
         }
         void Fault(Exception e) { Disengage("Error: autopilot released control. See KSP.log."); Debug.LogError("[AAC] " + e); }
-        static object Member(object obj, string name)
+        static IEnumerable<object> ConflictModules(Vessel vessel)
         {
-            if (obj == null) return null;
-            Type t = obj.GetType();
-            FieldInfo field = t.GetField(name, BindingFlags.Instance | BindingFlags.Public);
-            if (field != null) return field.GetValue(obj);
-            PropertyInfo property = t.GetProperty(name, BindingFlags.Instance | BindingFlags.Public);
-            return property == null ? null : property.GetValue(obj, null);
+            foreach (Part part in vessel.parts) foreach (PartModule module in part.Modules) yield return module;
         }
-        static bool Enabled(object obj) => obj != null && Equals(Member(obj, "Enabled"), true);
-        static string Conflict(Vessel vessel)
+        static IEnumerable<Delegate> ConflictCallbacks(Vessel vessel)
+        {
+            // Kramax George owns pre/post callbacks rather than OnFlyByWire.
+            Delegate[] phases = { vessel.OnFlyByWire, vessel.OnPreAutopilotUpdate, vessel.OnPostAutopilotUpdate };
+            foreach (Delegate phase in phases) if (phase != null)
+                foreach (Delegate callback in phase.GetInvocationList()) yield return callback;
+        }
+        string Conflict(Vessel vessel, bool refresh = false)
         {
             if (vessel.ActionGroups[KSPActionGroup.SAS]) return "SAS is ON: disable SAS before using Auto.";
             try {
-                foreach (Part part in vessel.parts) foreach (PartModule module in part.Modules) {
-                    if (module.GetType().FullName != "MuMech.MechJebCore") continue;
-                    if (Enabled(Member(module, "Attitude"))) return "MechJeb attitude control is active. Disengage it first.";
-                    MethodInfo get = module.GetType().GetMethod("GetComputerModule", new Type[] { typeof(string) });
-                    if (get == null) return "Cannot inspect MechJeb control ownership; disengage or remove MechJeb.";
-                    if (Enabled(get.Invoke(module, new object[] { "MechJebModuleAirplaneAutopilot" }))) return "MechJeb aircraft autopilot is active. Disengage it first.";
-                    if (Enabled(Member(module, "Thrust"))) return "MechJeb throttle control is active. Disengage it first.";
+                float now = Time.realtimeSinceStartup;
+                if (refresh || conflictVessel != vessel || now >= nextConflictDiscovery) {
+                    conflicts.Refresh(ConflictModules(vessel), ConflictCallbacks(vessel));
+                    conflictVessel = vessel;
+                    nextConflictDiscovery = now + 1f;
                 }
-                // Unknown control writers cannot be proven safe. FAR's aerodynamics are not an autopilot.
-                if (vessel.OnFlyByWire != null) foreach (Delegate callback in vessel.OnFlyByWire.GetInvocationList()) {
-                    string type = callback.Method.DeclaringType == null ? "" : callback.Method.DeclaringType.FullName;
-                    if (callback.Target is AircraftAutopilotAddon || type == "MuMech.MechJebCore" || type.StartsWith("FerramAerospaceResearch.")) continue;
-                    return "Another flight-control callback is present (" + type + "). Disable its controller first.";
-                }
-            } catch (Exception e) { Debug.LogWarning("[AAC] Conflict inspection: " + e); return "Cannot verify other controller ownership; engagement refused."; }
-            return null;
+                return conflicts.Check(false);
+            } catch (Exception e) {
+                Debug.LogWarning("[AAC] Conflict discovery: " + e);
+                return "Cannot inspect flight-control ownership: discovery failed. See KSP.log.";
+            }
         }
         void Update()
         {

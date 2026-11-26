@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 from pathlib import Path
-import zipfile,struct,hashlib
+import zipfile,struct,hashlib,sys
 r=Path(__file__).resolve().parent.parent
 mod='GameData/AircraftAutopilotContinued/'
 with zipfile.ZipFile(r/'dist/AircraftAutopilotContinued-1.0.0.zip') as z:
@@ -17,6 +17,7 @@ visible=addon.split('public void SetVisible(bool visible)',1)[1].split('void Ves
 assert 'SetEngaged' not in visible and 'Disengage(' not in visible
 print('PASS: package hierarchy, DLL identity, 38x38 icon, source package, window/controller separation')
 installed=r/'Source/KSP_osx'/mod/'Plugins/AircraftAutopilotContinued.dll'
-if installed.exists():
+if "--installed" in sys.argv:
+    assert installed.exists(), "Installed DLL is missing"
     assert installed.read_bytes()==(r/'build/AircraftAutopilotContinued.dll').read_bytes(), 'Installed DLL differs: rerun install.sh'
     print('PASS: installed DLL matches build: '+hashlib.sha256(installed.read_bytes()).hexdigest())

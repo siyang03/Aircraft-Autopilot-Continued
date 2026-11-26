@@ -45,7 +45,8 @@ was loaded. No flight stability, GUI interaction or FAR compatibility is claimed
    expand PID, scroll, edit fields, and verify no click-through; hiding releases locks.
 3. Disable SAS and other autopilots. Engage/disengage Auto; verify SAS prevents
    engagement and turning SAS on while engaged releases our controller. If refused
-   for a foreign callback, inspect the named mod rather than bypassing the check.
+   for unreadable known ownership, inspect the named mod. Unknown hooks should
+   warn in KSP.log without automatically refusing engagement.
 4. In stable flight, test standalone Roll Hold at 0, +20 and -20 degrees; verify
    convergence, correct bank direction and manual rudder availability.
 5. Test Heading Hold both ways through 359/0/1 degrees, limits, and fine corrections.
@@ -66,3 +67,20 @@ was loaded. No flight stability, GUI interaction or FAR compatibility is claimed
 MechJeb-free operation should be tested in a game session with MechJeb absent.
 When installed together, test refusal while MechJeb aircraft, attitude or throttle
 control is enabled. Do not run two flight controllers together.
+
+## Conflict regression coverage
+
+The conflict fix passes 8,521 assertions including the existing 1,200 historical
+comparison steps. Added cases cover MechJeb absent; enabled idle thrust with one
+self-user and OFF mode; additional users; non-OFF Tmode; active attitude/aircraft
+control; SAS; idle auxiliary callbacks with/without MechJeb; idle and independently
+active Kramax horizontal/vertical/throttle flags; live deactivation without
+rediscovery; deduplicated diagnostic warnings; missing ownership information;
+and public property reflection. No KSP launch or UI operation was performed for
+this fix. Installed optional-mod DLLs were inspected as managed data only.
+
+Manual follow-up: restart KSP to load the replacement DLL, test engagement with
+MechJeb installed but idle, and verify refusal when enabling a genuine MechJeb
+throttle request or Kramax mode. Auxiliary idle hooks should only warn. Run
+`python3 scripts/verify.py --installed` to recheck installed/build DLL identity;
+install.sh also performs this check automatically.

@@ -49,14 +49,23 @@ normal operation should use a positive bank magnitude.
   into `FlightInputHandler.state.mainThrottle` only for the active vessel while
   Speed Hold owns it. Speed Hold OFF or full disengagement writes no throttle,
   restores no stale input, and leaves the last commanded value for player handoff.
-* The host refuses engagement with SAS active, MechJeb aircraft/attitude/throttle
-  controllers enabled, unreadable MechJeb ownership, or unknown OnFlyByWire writers.
-  These checks repeat before every control tick; later conflicts disengage AAC.
-  It never disables another mod or SAS. FAR aerodynamics callbacks are permitted;
-  this is not certification of compatibility with FAR stability assistance.
-  Mods using other callback phases cannot all be identified; the UI explicitly
-  warns to keep other flight controllers off. Unknown writers can cause a
-  conservative false refusal even when they are currently idle.
+* The host refuses engagement with SAS active, MechJeb aircraft/attitude control,
+  MechJeb thrust with additional users or a non-OFF Tmode, and Kramax George with
+  HrztActive, VertActive or ThrtActive set. MechJeb Thrust.Enabled alone does not
+  imply ownership: the healthy sole self-user with OFF mode is allowed. Missing
+  essential Thrust.Enabled, Users.Count or Tmode information reports that specific
+  inspection uncertainty rather than claiming active throttle. No other mod or
+  SAS is disabled automatically.
+* Optional controller discovery inspects only the selected vessel's part modules
+  and OnFlyByWire/OnPreAutopilotUpdate/OnPostAutopilotUpdate targets. It runs on
+  engagement, vessel change and at most once per second while controlling; there
+  are no assembly scans or global object searches. Reflection metadata is cached.
+  Discovered ownership flags are checked every control tick, so existing
+  controllers activating are detected immediately; newly registered controllers
+  may take up to one second to discover. Unknown callbacks are logged once per
+  type without assuming they are active or blocking engagement. Other flight
+  controllers must still be kept off; unrecognized ownership cannot be inferred
+  from registration alone.
 * One active-vessel callback is owned at a time. Vessel switching always disengages;
   per-vessel modes/targets remain in memory within the scene, with no automatic
   reengagement. Scene exit/unload/faults detach. No background control is attempted.
@@ -81,3 +90,20 @@ The historical upstream source, extracted references and game are excluded by
 classes exist only in optional conflict reflection. The historical tests compile
 a separate test fixture into the **test executable only**, never the plugin.
 No Kramax, Harmony, Waypoint Navigator or unrelated MechJeb implementation is used.
+
+## Idle-mod conflict regression fix
+
+The installed MechJeb DLL (KSP.log reports 2.15.2) was inspected without launching
+KSP. Its OnStart IL adds `this` to Users; Drive loads Users.Count, compares it
+against 1 and skips the TargetThrottle write when count <= 1. This confirms the
+same self-user ownership convention as the historical 2.15.4 reference. The
+installed Kramax assembly exposes the three public bool flags on Kramax.George
+and its PreAutoPilotUpdate/PostAutoPilotUpdate instance methods. No installed
+third-party DLL was modified or added as a plugin compile reference.
+
+ConflictDetector uses the existing Member field/property reflection helper,
+now with cached metadata, and ICollection.Count for MechJeb UserPool. Tests use
+small optional-mod doubles and the production detector. PID/telemetry/controller
+and GUI implementation files are unchanged by this fix. Packaging verification
+runs before installation without requiring an older installed DLL to match;
+install.sh explicitly runs the installed-DLL identity check after copying.

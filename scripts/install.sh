@@ -19,3 +19,5 @@ fi
 mkdir -p "$TARGET"
 cp -R "$ROOT/dist/GameData/AircraftAutopilotContinued/" "$TARGET/"
 printf 'Installed: %s/Plugins/AircraftAutopilotContinued.dll\n' "$TARGET"
+
+python3 "$ROOT/scripts/verify.py" --installed

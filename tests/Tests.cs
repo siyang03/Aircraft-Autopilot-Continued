@@ -114,5 +114,5 @@ class Tests {
         Console.WriteLine("Plugin references: "+string.Join(", ",refs));
         Check(r.GetString(r.GetAssemblyDefinition().Name)=="AircraftAutopilotContinued","unique assembly name");
     }
-    static int Main(string[] args) { try{PID();Telemetry();Modes();Numeric();Ownership();Differential();Metadata(args[0]);Console.WriteLine("PASS: "+checks+" assertions (including 1,200 historical differential steps). Native flight/GUI not tested.");return 0;}catch(Exception e){Console.Error.WriteLine(e);return 1;} }
+    static int Main(string[] args) { try{PID();Telemetry();Modes();Numeric();Ownership();ConflictTests.Run(Check);Differential();Metadata(args[0]);Console.WriteLine("PASS: "+checks+" assertions (including 1,200 historical differential steps). Native flight/GUI not tested.");return 0;}catch(Exception e){Console.Error.WriteLine(e);return 1;} }
 }

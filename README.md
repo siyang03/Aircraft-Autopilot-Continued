@@ -18,7 +18,10 @@ Closing the window keeps Auto engaged. Disengage to return the owned channels
 to the player. Throttle remains at its last command until the player changes it;
 Speed Hold OFF never commands zero. SAS activation releases our controller.
 Vessel switching, unloading, scene exit and faults disengage; returning never
-silently reengages. Unknown OnFlyByWire writers cause conservative refusal.
+silently reengages. Unknown flight-control hooks produce diagnostic warnings rather than automatic refusal.
+Idle MechJeb thrust (sole self-user, OFF mode) is allowed. Additional throttle users
+or non-OFF modes, active MechJeb attitude/aircraft control and active Kramax George
+modes prevent engagement. Unreadable known ownership reports the specific uncertainty.
 FAR aerodynamics are allowed; disable any separate FAR assistance controller.
 
 All five original modes and four editable PIDs are retained. As in the original,
