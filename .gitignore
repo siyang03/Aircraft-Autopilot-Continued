@@ -1,13 +1,5 @@
 *.DS_Store
-
-# Local KSP installation
-/Source/KSP_osx/
-
-# Upstream MechJeb reference repository
-/Source/MechJeb2-dev/
-
-# Original MechJeb reference files
-/Source/MechJeb essential/
+/Source/
 
 # Build artifacts
 **/bin/
@@ -17,4 +9,3 @@
 
 # Project-local compiler and runtime settings
 /.tools/
-/GameData/
