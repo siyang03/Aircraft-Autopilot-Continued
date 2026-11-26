@@ -1,5 +1,5 @@
 *.DS_Store
-/Source/
+Source/
 
 # Build artifacts
 **/bin/
