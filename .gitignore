@@ -1,5 +1,6 @@
 *.DS_Store
 Source/
+Aircraft Autopilot Continued.zip
 
 # Build artifacts
 **/bin/
