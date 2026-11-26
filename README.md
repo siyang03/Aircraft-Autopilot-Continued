@@ -12,7 +12,7 @@ Preserves the familiar interface and flight controls, including:
 
 ## Installation
 
-Download the latest release and extract the `GameData` folder into your KSP installation.
+[Download](https://github.com/siyang03/Aircraft-Autopilot-Continued/releases/latest/download/Aircraft.Autopilot.Continued.zip) the latest release and extract the `GameData` folder into your KSP installation.
 
 Compatible with **Kerbal Space Program 1.12.5**.
 
@@ -23,6 +23,8 @@ Click the **`Aircr Auto`** button in the in-game toolbar to open the autopilot p
 The interface closely follows the original MechJeb Aircraft Autopilot and should be familiar to existing users. Select the controls you want, set their targets, and click **Engage Autopilot**.
 
 For advanced users, expand the **PID** section to tune the controller parameters yourself.
+
+![In game demostration.](Screenshots/Screenshot.png)
 
 ## Why I Made This Mod
 
